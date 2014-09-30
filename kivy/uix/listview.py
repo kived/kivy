@@ -773,7 +773,9 @@ class CompositeListItem(SelectableView, BoxLayout):
 Builder.load_string('''
 <ListView>:
     container: container
+    scroll_view: scroll_view
     ScrollView:
+        id: scroll_view
         pos: root.pos
         on_scroll_y: root._scroll(args[1])
         do_scroll_x: False
@@ -832,6 +834,21 @@ class ListView(AbstractView, EventDispatcher):
     defaults to None.
     '''
 
+    scroll_view = ObjectProperty(None)
+    '''Reference to the inner :class:`~kivy.uix.scrollview.ScrollView`.
+
+    :attr:`scroll_view` is an :class:`~kivy.properties.ObjectProperty`.
+    '''
+
+    fill_all = BooleanProperty(False)
+    '''Option to load all items in the container. This allows you to load
+    all lines in the container. You can use scroll_view to scroll up
+    and down.
+
+    :attr:`fill_all` is a :class:`~kivy.properties.BooleanProperty` and
+    defaults to False.
+    '''
+
     row_height = NumericProperty(None)
     '''The row_height property is calculated on the basis of the height of the
     container and the count of items.
@@ -866,7 +883,7 @@ class ListView(AbstractView, EventDispatcher):
     _wstart = NumericProperty(0)
     _wend = NumericProperty(-1)
 
-    __events__ = ('on_scroll_complete', )
+    __events__ = ('on_scroll_complete', 'on_populate_complete')
 
     def __init__(self, **kwargs):
         # Check for an adapter argument. If it doesn't exist, we
@@ -923,6 +940,10 @@ class ListView(AbstractView, EventDispatcher):
         if self.row_height is None:
             return
         self._scroll_y = scroll_y
+
+        if self.fill_all:
+            return
+
         scroll_y = 1 - min(1, max(scroll_y, 0))
         container = self.container
         mstart = (container.height - self.height) * scroll_y
@@ -971,6 +992,10 @@ class ListView(AbstractView, EventDispatcher):
         # clear the view
         container.clear_widgets()
 
+        if self.fill_all:
+            container.bind(minimum_height=container.setter('height'))
+            iend = self.adapter.get_count()
+
         # guess only ?
         if iend is not None and iend != -1:
 
@@ -1015,6 +1040,8 @@ class ListView(AbstractView, EventDispatcher):
                 if self.row_height is None:
                     self.row_height = real_height / count
 
+        self.dispatch('on_populate_complete')
+
     def scroll_to(self, index=0):
         if not self.scrolling:
             self.scrolling = True
@@ -1024,3 +1051,6 @@ class ListView(AbstractView, EventDispatcher):
 
     def on_scroll_complete(self, *args):
         self.scrolling = False
+
+    def on_populate_complete(self, *args):
+        pass
