@@ -416,10 +416,21 @@ class ScrollView(StencilView):
     to ['content'].
     '''
 
+    paging_increment = NumericProperty(1.)
+    '''Controls the distance a 'page' will scroll. A value of 1 would cause
+    paging to scroll by the size of the ScrollView. A value of 0.5 would cause
+    paging to scroll by half the size of the ScrollView.
+
+    :attr:`paging_increment` is a :class:`~kivy.properties.NumericProperty`
+    and defaults to 1.0.
+    '''
+
     # private, for internal use only
 
     _viewport = ObjectProperty(None, allownone=True)
     _bar_color = ListProperty([0, 0, 0, 0])
+    _paging_distance_x = NumericProperty(0)
+    _paging_distance_y = NumericProperty(0)
 
     def _set_viewport_size(self, instance, value):
         self.viewport_size = value
@@ -943,6 +954,46 @@ class ScrollView(StencilView):
 
     def _change_bar_color(self, inst, value):
         self._bar_color = value
+
+    @staticmethod
+    def _get_paging_scroll_value(scroll_value, distance):
+        return min(1.0, max(0.0, scroll_value + distance))
+
+    def _get_paging_distance(self, content_size, viewport_size):
+        return (False if content_size < viewport_size
+                else (self.paging_increment * content_size /
+                      (viewport_size - content_size)))
+
+    def _update_paging_distance(self):
+        if self.do_scroll_x:
+            self._paging_distance_x = self._get_paging_distance(
+                self.width, self._viewport.width) or self._paging_distance_x
+        if self.do_scroll_y:
+            self._paging_distance_y = self._get_paging_distance(
+                self.height, self._viewport.height) or self._paging_distance_y
+
+    def page_up(self):
+        self._page('up')
+
+    def page_down(self):
+        self._page('down')
+
+    def page_left(self):
+        self._page('left')
+
+    def page_right(self):
+        self._page('right')
+
+    def _page(self, direction):
+        self._update_paging_distance()
+        if self.do_scroll_x and direction in ('left', 'right'):
+            value = self._paging_distance_x * \
+                    (-1 if direction == 'left' else 1)
+            self.scroll_x = self._get_paging_distance(self.scroll_x, value)
+        elif self.do_scroll_y and direction in ('up', 'down'):
+            value = self._paging_distance_y * \
+                    (-1 if direction == 'down' else 1)
+            self.scroll_y = self._get_paging_distance(self.scroll_y, value)
 
     #
     # Private
