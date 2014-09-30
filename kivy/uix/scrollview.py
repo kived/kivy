@@ -955,14 +955,9 @@ class ScrollView(StencilView):
     def _change_bar_color(self, inst, value):
         self._bar_color = value
 
-    @staticmethod
-    def _get_paging_scroll_value(scroll_value, distance):
-        return min(1.0, max(0.0, scroll_value + distance))
-
-    def _get_paging_distance(self, content_size, viewport_size):
-        return (False if content_size < viewport_size
-                else (self.paging_increment * content_size /
-                      (viewport_size - content_size)))
+    def _get_paging_distance(self, scroll_size, viewport_size):
+        return (False if scroll_size >= viewport_size
+                else (self.paging_increment * scroll_size))
 
     def _update_paging_distance(self):
         if self.do_scroll_x:
@@ -986,14 +981,20 @@ class ScrollView(StencilView):
 
     def _page(self, direction):
         self._update_paging_distance()
+        value, e = 0, None
         if self.do_scroll_x and direction in ('left', 'right'):
-            value = self._paging_distance_x * \
-                    (-1 if direction == 'left' else 1)
-            self.scroll_x = self._get_paging_distance(self.scroll_x, value)
+            value = self._paging_distance_x
+            e = self.effect_y
         elif self.do_scroll_y and direction in ('up', 'down'):
-            value = self._paging_distance_y * \
-                    (-1 if direction == 'down' else 1)
-            self.scroll_y = self._get_paging_distance(self.scroll_y, value)
+            value = self._paging_distance_y
+            e = self.effect_y
+
+        if e:
+            e.value = max(e.value - value, e.min) \
+                if direction in ('right', 'up') \
+                else min(e.value + value, e.max)
+            e.velocity = 0
+            e.trigger_velocity_update()
 
     #
     # Private
