@@ -97,7 +97,7 @@ class EventLoopBase(EventDispatcher):
     dispatching events.
     '''
 
-    __events__ = ('on_start', 'on_pause', 'on_stop')
+    __events__ = ('on_start', 'on_pause', 'on_stop', 'on_before_stop')
 
     def __init__(self):
         super(EventLoopBase, self).__init__()
@@ -190,6 +190,7 @@ class EventLoopBase(EventDispatcher):
         self.input_events = []
 
         self.status = 'stopped'
+        self.dispatch('on_before_stop')
         self.dispatch('on_stop')
 
     def add_postproc_module(self, mod):
@@ -363,6 +364,10 @@ class EventLoopBase(EventDispatcher):
         self.close()
         if self.window:
             self.window.close()
+
+    def on_before_stop(self):
+        '''Event handler fired immediately before `on_stop`.'''
+        pass
 
     def on_stop(self):
         '''Event handler for `on_stop` events which will be fired right
