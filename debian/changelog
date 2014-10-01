@@ -1,0 +1,18 @@
+kivy (1.6.1-dev+ee) raring; urgency=low
+
+  * prepare for packaging
+
+ -- Ryan Pessa <ryan@essential-elements.net>  Tue, 16 Apr 2013 12:12:06 -0500
+
+kivy (1.6.0+rebuild3+stable-cython+201303211308~pkg38~raring1) raring; urgency=low
+
+  * Auto build.
+
+ -- Thomas-Karl Pietrowski <thopiekar@googlemail.com>  Thu, 21 Mar 2013 13:08:21 +0000
+
+kivy (1.4.1) raring; urgency=low
+
+  * RECIPE BUILD
+
+ -- Thomas-Karl Pietrowski <thopiekar@googlemail.com>  Tue, 14 Nov 2012 22:32:44 +0200
+

@@ -1,0 +1,3 @@
+# bzr-builder format 0.3 deb-version 1.6.0+rebuild3+stable-cython+201303211308~pkg38
+lp:kivy revid:git-v1:95069fc84df9e62257e52b85944f6aa012b6d3bd
+nest-part packaging lp:~kivy-team/kivy/packaging debian debian revid:thopiekar@googlemail.com-20130315224925-k7231jt24ir1a8xv
