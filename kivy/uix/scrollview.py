@@ -984,7 +984,7 @@ class ScrollView(StencilView):
         value, e = 0, None
         if self.do_scroll_x and direction in ('left', 'right'):
             value = self._paging_distance_x
-            e = self.effect_y
+            e = self.effect_x
         elif self.do_scroll_y and direction in ('up', 'down'):
             value = self._paging_distance_y
             e = self.effect_y
