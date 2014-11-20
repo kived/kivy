@@ -41,6 +41,12 @@ will be used only for caching)::
 
 __all__ = ('Image', 'ImageLoader', 'ImageData')
 
+import re
+import tempfile
+import os
+import base64
+import zipfile
+
 from kivy.event import EventDispatcher
 from kivy.core import core_register_libs
 from kivy.logger import Logger
@@ -305,6 +311,8 @@ class ImageLoader(object):
 
     loaders = []
 
+    data_uri_re = re.compile('^data:image/([^;,]*)(;[^,]*)?,(.*)$')
+
     @staticmethod
     def zip_loader(filename, **kwargs):
         '''Read images from an zip file.
@@ -365,6 +373,7 @@ class ImageLoader(object):
 
     @staticmethod
     def load(filename, **kwargs):
+        is_data_uri = False
 
         # atlas ?
         if filename[:8] == 'atlas://':
@@ -406,6 +415,24 @@ class ImageLoader(object):
                 Cache.append('kv.texture', cid, texture)
             return Image(atlas[uid])
 
+        if filename.startswith('data:'):
+            groups = ImageLoader.data_uri_re.findall(filename)
+            if groups:
+                imtype, optstr, data = groups[0]
+                options = [o for o in optstr.split(';') if o]
+                ext = imtype
+                isb64 = 'base64' in options
+                is_data_uri = True
+                f, filename = tempfile.mkstemp(suffix='.' + ext,
+                                               prefix='kivy.datauri-')
+                try:
+                    if isb64:
+                        os.write(f, base64.b64decode(data))
+                    else:
+                        os.write(f, data)
+                finally:
+                    os.close(f)
+
         # extract extensions
         ext = filename.split('.')[-1].lower()
 
@@ -429,6 +456,8 @@ class ImageLoader(object):
                              (loader.__name__[11:], filename))
                 im = loader(filename, **kwargs)
                 break
+            if is_data_uri:
+                os.unlink(filename)
             if im is None:
                 raise Exception('Unknown <%s> type, no loader found.' % ext)
             return im
