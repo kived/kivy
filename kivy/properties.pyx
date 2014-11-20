@@ -752,7 +752,7 @@ class ObservableDict(dict):
     def __getattr__(self, attr):
         try:
             return self._weak_return(self.__getitem__(attr))
-        except KeyError:
+        except (KeyError, AttributeError):
             return self._weak_return(
                             super(ObservableDict, self).__getattr__(attr))
 
