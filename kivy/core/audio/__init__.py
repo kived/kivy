@@ -46,6 +46,11 @@ keep this in mind when debugging or running in a
 
 __all__ = ('Sound', 'SoundLoader')
 
+import re
+import os
+import tempfile
+import base64
+import atexit
 from kivy.logger import Logger
 from kivy.event import EventDispatcher
 from kivy.core import core_register_libs
@@ -57,11 +62,25 @@ from kivy.utils import platform
 from kivy.setupconfig import USE_SDL2
 
 
+_data_uri_files = []
+
+def _unlink_data_uri_files():
+    for filename in _data_uri_files:
+        try:
+            os.unlink(filename)
+        except Exception:
+            Logger.error('Sound: failed to remove data uri file %s', filename)
+
+atexit.register(_unlink_data_uri_files)
+
+
 class SoundLoader:
     '''Load a sound, using the best loader for the given file type.
     '''
 
     _classes = []
+    
+    data_uri_re = re.compile('^data:audio/([^;,]*)(;[^,]*)?,(.*)$')
 
     @staticmethod
     def register(classobj):
@@ -72,6 +91,23 @@ class SoundLoader:
     @staticmethod
     def load(filename):
         '''Load a sound, and return a Sound() instance.'''
+        if filename.startswith('data:'):
+            groups = SoundLoader.data_uri_re.findall(filename)
+            if groups:
+                sndtype, optstr, data = groups[0]
+                options = [o for o in optstr.split(';') if o]
+                ext = sndtype
+                isb64 = 'base64' in options
+                f, filename = tempfile.mkstemp(suffix='.' + ext, prefix='kivy.datauri-')
+                _data_uri_files.append(filename)
+                try:
+                    if isb64:
+                        os.write(f, base64.b64decode(data))
+                    else:
+                        os.write(f, data)
+                finally:
+                    os.close(f)
+
         rfn = resource_find(filename)
         if rfn is not None:
             filename = rfn
