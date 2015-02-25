@@ -1,20 +1,8 @@
-kivy (1.9.0-dev-eepa7) trusty; urgency=low
+kivy (1.9.0-dev-eepa7) UNRELEASED; urgency=medium
 
-  * test new build system
+  * test build system
 
-  -- Ryan Pessa <ryan@essential-elements.net>  Wed, 25 Feb 2015 15:23:47 -0600
-
-kivy (1.6.1-dev+ee) raring; urgency=low
-
-  * prepare for packaging
-
- -- Ryan Pessa <ryan@essential-elements.net>  Tue, 16 Apr 2013 12:12:06 -0500
-
-kivy (1.6.0+rebuild3+stable-cython+201303211308~pkg38~raring1) raring; urgency=low
-
-  * Auto build.
-
- -- Thomas-Karl Pietrowski <thopiekar@googlemail.com>  Thu, 21 Mar 2013 13:08:21 +0000
+ -- Ryan Pessa <ryan@essential-elements.net>  Wed, 25 Feb 2015 16:03:45 -0600
 
 kivy (1.4.1) raring; urgency=low
 
