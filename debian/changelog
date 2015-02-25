@@ -1,7 +1,7 @@
 kivy (1.9.0-dev-eepa7) trusty; urgency=low
 
   * test new build system
-  
+
   -- Ryan Pessa <ryan@essential-elements.net>  Wed, 25 Feb 2015 15:23:47 -0600
 
 kivy (1.6.1-dev+ee) raring; urgency=low
