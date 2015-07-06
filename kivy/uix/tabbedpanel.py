@@ -131,6 +131,8 @@ from kivy.uix.scatter import Scatter
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
 from kivy.logger import Logger
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty, OptionProperty, \
@@ -456,6 +458,27 @@ class TabbedPanel(GridLayout):
     :attr:`default_tab_content` is an :class:`~kivy.properties.AliasProperty`.
     '''
 
+    show_tab_scroll_buttons = BooleanProperty(False)
+    '''Shows tab scroll buttons.
+
+    :attr:`show_tab_scroll_buttons` is an
+    :class:`~kivy.properties.BooleanProperty`. and defaults to 'False'.
+    '''
+
+    tab_scroll_button_size_hint_x = NumericProperty(0.1)
+    '''Specifies the size_hint_x of the tab scroll buttons.
+
+    :attr:`tab_scroll_button_size_hint_x` is an
+    :class:`~kivy.properties.NumericProperty`. and defaults to 0.1.
+    '''
+
+    tab_scroll_button_font_size = NumericProperty('20sp')
+    '''Specifies the font_size of the tab scroll buttons.
+
+    :attr:`tab_scroll_button_font_size` is an
+    :class:`~kivy.properties.NumericProperty`. and defaults to 20sp.
+    '''
+
     def __init__(self, **kwargs):
         # these variables need to be initialized before the kv lang is
         # processed setup the base layout for the tabbed panel
@@ -660,15 +683,29 @@ class TabbedPanel(GridLayout):
         parent = tabs.parent
         if parent:
             parent.remove_widget(tabs)
+
+        show_tab_scroll_buttons = self.show_tab_scroll_buttons
+        if show_tab_scroll_buttons:
+            get_tab_button = self._get_tab_button
+            btn_left = get_tab_button('<', lambda _dt: scrl_v.page_left())
+            btn_right = get_tab_button('>', lambda _dt: scrl_v.page_right())
+            scrl_v.size_hint_x = 1
+            scrl_v_container = BoxLayout(size_hint=(None, 1))
+            scrl_v_container.add_widget(btn_left)
+            scrl_v_container.add_widget(scrl_v)
+            scrl_v_container.add_widget(btn_right)
+        else:
+            scrl_v_container = scrl_v
+
         scrl_v.add_widget(tabs)
-        scrl_v.pos = (0, 0)
+        scrl_v_container.pos = (0, 0)
         self_update_scrollview = self._update_scrollview
 
         # update scrlv width when tab width changes depends on tab_pos
         if self._partial_update_scrollview is not None:
             tabs.unbind(width=self._partial_update_scrollview)
         self._partial_update_scrollview = partial(
-            self_update_scrollview, scrl_v)
+            self_update_scrollview, scrl_v_container)
         tabs.bind(width=self._partial_update_scrollview)
 
         # remove all widgets from the tab_strip
@@ -690,28 +727,28 @@ class TabbedPanel(GridLayout):
             tab_layout.size_hint = (1, None)
             tab_layout.height = (tab_height + tab_layout.padding[1] +
                                  tab_layout.padding[3] + dp(2))
-            self_update_scrollview(scrl_v)
+            self_update_scrollview(scrl_v_container)
 
             if pos_letter == 'b':
                 # bottom
                 if tab_pos == 'bottom_mid':
-                    tab_list = (Widget(), scrl_v, Widget())
+                    tab_list = (Widget(), scrl_v_container, Widget())
                     widget_list = (self_content, tab_layout)
                 else:
                     if tab_pos == 'bottom_left':
-                        tab_list = (scrl_v, Widget(), Widget())
+                        tab_list = (scrl_v_container, Widget(), Widget())
                     elif tab_pos == 'bottom_right':
                         #add two dummy widgets
-                        tab_list = (Widget(), Widget(), scrl_v)
+                        tab_list = (Widget(), Widget(), scrl_v_container)
                     widget_list = (self_content, tab_layout)
             else:
                 # top
                 if tab_pos == 'top_mid':
-                    tab_list = (Widget(), scrl_v, Widget())
+                    tab_list = (Widget(), scrl_v_container, Widget())
                 elif tab_pos == 'top_left':
-                    tab_list = (scrl_v, Widget(), Widget())
+                    tab_list = (scrl_v_container, Widget(), Widget())
                 elif tab_pos == 'top_right':
-                    tab_list = (Widget(), Widget(), scrl_v)
+                    tab_list = (Widget(), Widget(), scrl_v_container)
                 widget_list = (tab_layout, self_content)
         elif pos_letter == 'l' or pos_letter == 'r':
             # left ot right positions
@@ -725,8 +762,8 @@ class TabbedPanel(GridLayout):
             tab_layout.cols = 1
             tab_layout.size_hint = (None, 1)
             tab_layout.width = tab_height
-            scrl_v.height = tab_height
-            self_update_scrollview(scrl_v)
+            scrl_v_container.height = tab_height
+            self_update_scrollview(scrl_v_container)
 
             # rotate the scatter for vertical positions
             rotation = 90 if tab_pos[0] == 'l' else -90
@@ -736,8 +773,8 @@ class TabbedPanel(GridLayout):
                            do_scale=False,
                            size_hint=(None, None),
                            auto_bring_to_front=False,
-                           size=scrl_v.size)
-            sctr.add_widget(scrl_v)
+                           size=scrl_v_container.size)
+            sctr.add_widget(scrl_v_container)
 
             lentab_pos = len(tab_pos)
 
@@ -756,7 +793,7 @@ class TabbedPanel(GridLayout):
             elif tab_pos[lentab_pos - 4:] == '_mid':
                 #calculate top of scatter
                 sctr.bind(pos=partial(self._update_top, sctr, 'mid',
-                                      scrl_v.width))
+                                      scrl_v_container.width))
                 tab_list = (Widget(), sctr, Widget())
             elif tab_pos[lentab_pos - 7:] == '_bottom':
                 tab_list = (Widget(), Widget(), sctr)
@@ -822,3 +859,11 @@ class TabbedPanel(GridLayout):
             # left or right
             scrl_v.width = min(self.height, self_tabs.width)
             self_tabs.pos = (0, 0)
+
+    def _get_tab_button(self, text, callback):
+        tab_button = Button(text=text,
+                            bold=True,
+                            size_hint_x=self.tab_scroll_button_size_hint_x,
+                            font_size=self.tab_scroll_button_font_size)
+        tab_button.bind(on_press=callback)
+        return tab_button
