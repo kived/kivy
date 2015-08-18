@@ -546,13 +546,17 @@ class VKeyboard(Scatter):
         layout_geometry = self.layout_geometry
         background = resource_find(self.key_background_down)
         texture = Image(background, mipmap=True).texture
+        layout = self.available_layouts[self.layout]
+        layout_mode = self.layout_mode
 
         with self.active_keys_layer:
             Color(1, 1, 1)
             for line_nb, index in active_keys.values():
                 pos, size = layout_geometry['LINE_%d' % line_nb][index]
-                BorderImage(texture=texture, pos=pos, size=size,
-                            border=self.key_border)
+                text = layout[layout_mode + '_' + str(line_nb)][index][0]
+                if not text is None:
+                    BorderImage(texture=texture, pos=pos, size=size,
+                                border=self.key_border)
 
     def refresh_keys_hint(self):
         layout = self.available_layouts[self.layout]
@@ -624,12 +628,21 @@ class VKeyboard(Scatter):
         self.layout_geometry = layout_geometry
         self.draw_keys()
 
-    def draw_keys(self):
+    def get_geometry_data(self):
         layout = self.available_layouts[self.layout]
         layout_rows = layout['rows']
         layout_geometry = self.layout_geometry
         layout_mode = self.layout_mode
 
+        for line_nb in range(1, layout_rows + 1):
+            key_nb = 0
+            for pos, size in layout_geometry['LINE_%d' % line_nb]:
+                # retrieve the relative text
+                text = layout[layout_mode + '_' + str(line_nb)][key_nb][0]
+                key_nb += 1
+                yield pos, size, text
+
+    def draw_keys(self):
         # draw background
         w, h = self.size
 
@@ -652,24 +665,20 @@ class VKeyboard(Scatter):
                                    self.key_background_normal)
         texture = Image(key_normal, mipmap=True).texture
         with self.background_key_layer:
-            for line_nb in range(1, layout_rows + 1):
-                for pos, size in layout_geometry['LINE_%d' % line_nb]:
-                        BorderImage(texture=texture, pos=pos, size=size,
-                                    border=self.key_border)
+            for pos, size, text in self.get_geometry_data():
+                if not text is None:
+                    BorderImage(texture=texture, pos=pos, size=size,
+                                border=self.key_border)
 
         # then draw the text
         # calculate font_size
         font_size = int(w) / 46
         # draw
-        for line_nb in range(1, layout_rows + 1):
-            key_nb = 0
-            for pos, size in layout_geometry['LINE_%d' % line_nb]:
-                # retrieve the relative text
-                text = layout[layout_mode + '_' + str(line_nb)][key_nb][0]
+        for pos, size, text in self.get_geometry_data():
+            if not text is None:
                 l = Label(text=text, font_size=font_size, pos=pos, size=size,
                           font_name=self.font_name)
                 self.add_widget(l)
-                key_nb += 1
 
     def on_key_down(self, *largs):
         pass
