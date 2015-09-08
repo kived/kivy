@@ -936,6 +936,9 @@ class ListView(AbstractView, EventDispatcher):
         # bindings back to the view updating function here.
         bind_adapter()
 
+        self.__trigger_populate_complete = \
+            Clock.create_trigger(self._trigger_populate_complete)
+
     # Added to set data when item_strings is set in a kv template, but it will
     # be good to have also if item_strings is reset generally.
     def item_strings_changed(self, *args):
@@ -1045,7 +1048,7 @@ class ListView(AbstractView, EventDispatcher):
                 if self.row_height is None:
                     self.row_height = real_height / count
 
-        self.dispatch('on_populate_complete')
+        self.__trigger_populate_complete()
 
     def scroll_to(self, index=0):
         if not self.scrolling:
@@ -1056,6 +1059,9 @@ class ListView(AbstractView, EventDispatcher):
 
     def on_scroll_complete(self, *args):
         self.scrolling = False
+
+    def _trigger_populate_complete(self, *args):
+        self.dispatch('on_populate_complete')
 
     def on_populate_complete(self, *args):
         pass
