@@ -13,6 +13,10 @@ Build-Depends: debhelper (>= 7.0.50~),
                libgles2-mesa-dev,
                libgstreamer1.0-dev,
                libraspberrypi-dev [armhf],
+               libsdl2-dev,
+               libsdl2-image-dev,
+               libsdl2-mixer-dev,
+               libsdl2-ttf-dev,
 Standards-Version: 3.9.1
 Homepage: http://kivy.org/
 Vcs-Bzr: https://code.launchpad.net/~kivy-team/kivy/master
@@ -23,7 +27,6 @@ Depends: ${misc:Depends},
          ${shlibs:Depends},
          ${python:Depends},
          python-docutils,
-         python-pygame,
          python-pygments,
          python-gobject,
          gstreamer1.0-x
